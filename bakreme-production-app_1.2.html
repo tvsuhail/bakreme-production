@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Bakreme Bakes — Production</title>
+<style>
+:root {
+  --bg:#0f0e0d;--bg2:#1a1917;--bg3:#242320;--card:#1f1e1c;
+  --border:#2e2d2a;--accent:#e8a045;--text:#f0ede8;--muted:#8a8780;
+  --danger:#e05252;--success:#4caf7d;--radius:12px;
+  --font:'Georgia',serif;--mono:'Courier New',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;max-width:480px;margin:0 auto;}
+.screen{display:none;animation:fadeIn .2s ease;}
+.screen.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.app-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.app-logo{font-size:18px;font-weight:bold;color:var(--accent);}
+.app-logo span{color:var(--muted);font-size:12px;display:block;font-weight:normal;}
+.btn-icon{background:var(--bg3);border:1px solid var(--border);color:var(--muted);width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;}
+.login-wrapper{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:40px 28px;}
+.login-logo{text-align:center;margin-bottom:32px;}
+.login-logo h1{font-size:26px;color:var(--accent);}
+.login-logo p{color:var(--muted);font-size:14px;margin-top:4px;}
+.bread-icon{font-size:44px;margin-bottom:10px;}
+input,select{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:12px 14px;border-radius:8px;font-size:15px;font-family:var(--font);margin-bottom:10px;outline:none;transition:border-color .15s;}
+input:focus,select:focus{border-color:var(--accent);}
+select option{background:var(--bg3);}
+label{font-size:13px;color:var(--muted);display:block;margin-bottom:5px;}
+.btn{width:100%;padding:14px;border-radius:10px;border:none;font-size:16px;font-family:var(--font);cursor:pointer;transition:all .15s;font-weight:bold;}
+.btn-primary{background:var(--accent);color:#1a1208;}
+.btn-primary:hover{background:#f0b060;}
+.btn-primary:active{transform:scale(.98);}
+.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border);}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+.btn-sm{width:auto;padding:8px 16px;font-size:13px;border-radius:8px;}
+.pin-display{display:flex;gap:10px;justify-content:center;margin:16px 0;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);background:transparent;transition:all .15s;}
+.pin-dot.filled{background:var(--accent);border-color:var(--accent);}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;}
+.numpad-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:18px;border-radius:10px;font-size:20px;font-family:var(--font);cursor:pointer;transition:all .1s;text-align:center;}
+.numpad-btn:active{transform:scale(.95);background:var(--border);}
+.numpad-btn.clear{color:var(--danger);}
+.numpad-btn.enter{background:var(--accent);color:#1a1208;font-weight:bold;}
+.search-bar{position:relative;margin-bottom:14px;}
+.search-bar input{margin:0;padding-left:38px;}
+.search-bar .icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);}
+.category-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px;scrollbar-width:none;}
+.category-tabs::-webkit-scrollbar{display:none;}
+.cat-tab{background:var(--bg3);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:20px;font-size:12px;white-space:nowrap;cursor:pointer;font-family:var(--font);transition:all .15s;}
+.cat-tab.active{background:var(--accent);color:#1a1208;border-color:var(--accent);font-weight:bold;}
+.product-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px;transition:border-color .15s;}
+.product-item.has-qty{border-color:var(--accent);}
+.product-info{flex:1;min-width:0;}
+.product-name{font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.product-meta{font-size:11px;color:var(--muted);margin-top:2px;font-family:var(--mono);}
+.qty-control{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.qty-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
+.qty-btn:active{transform:scale(.9);}
+.qty-btn.plus{border-color:var(--accent);color:var(--accent);}
+.qty-input{width:48px;text-align:center;padding:6px 4px;margin:0;font-size:16px;font-weight:bold;border-radius:8px;}
+.planned-row{display:flex;gap:8px;align-items:center;margin-top:6px;}
+.planned-label{font-size:12px;color:var(--muted);white-space:nowrap;}
+.planned-input{width:72px;padding:4px 8px;font-size:13px;margin:0;border-radius:6px;height:30px;}
+.summary-bar{background:var(--bg2);border-top:1px solid var(--border);padding:14px 20px;position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:100;}
+.summary-info{font-size:13px;color:var(--muted);}
+.summary-info strong{color:var(--accent);font-size:16px;}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--success);color:#0a2e1a;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:bold;z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.error{background:var(--danger);color:#fff;}
+.report-filters{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
+.filter-row{display:flex;gap:10px;}
+.filter-row input,.filter-row select{margin:0;flex:1;}
+.report-tabs{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px;}
+.report-tab{flex:1;padding:10px;background:var(--bg3);border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:var(--font);transition:all .15s;text-align:center;}
+.report-tab.active{background:var(--accent);color:#1a1208;font-weight:bold;}
+.report-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;}
+.report-card-header{display:flex;justify-content:space-between;align-items:flex-start;}
+.report-card-title{font-size:14px;color:var(--text);}
+.report-card-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.report-badge{background:var(--bg3);border:1px solid var(--border);color:var(--accent);padding:4px 10px;border-radius:20px;font-size:13px;font-weight:bold;font-family:var(--mono);}
+.report-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
+.stat-val{font-size:20px;font-weight:bold;color:var(--accent);}
+.stat-label{font-size:11px;color:var(--muted);margin-top:2px;}
+.export-row{display:flex;gap:10px;margin-bottom:16px;}
+.export-row .btn{flex:1;}
+.chef-badge{background:var(--bg3);border:1px solid var(--accent);color:var(--accent);padding:6px 14px;border-radius:20px;font-size:13px;}
+.error-msg{color:var(--danger);font-size:13px;text-align:center;margin-top:8px;min-height:18px;}
+.loader{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--muted);font-size:14px;}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-right:10px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px;}
+.empty-state .big{font-size:36px;margin-bottom:10px;}
+.pb-sum{padding-bottom:80px;}
+.sup-table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-top:none;font-size:13px;}
+.sup-table th{padding:6px 8px;text-align:left;background:var(--bg3);color:var(--muted);font-size:12px;}
+.sup-table td{padding:6px 8px;border-bottom:1px solid var(--border);}
+.sup-table tr.total-row td{font-weight:bold;background:var(--bg3);}
+.chef-header{background:var(--accent);color:#1a1208;padding:8px 14px;border-radius:8px 8px 0 0;font-weight:bold;font-size:14px;margin-top:16px;}
+.grand-total{background:var(--bg2);border:1px solid var(--accent);border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;font-weight:bold;margin-top:16px;font-size:14px;}
+@media(prefers-color-scheme:light){
+  :root{--bg:#faf8f4;--bg2:#f0ece4;--bg3:#e8e2d8;--card:#fff;--border:#ddd8cc;--text:#1a1816;--muted:#7a7570;}
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN -->
+<div id="screen-login" class="screen active">
+<div class="login-wrapper">
+  <div class="login-logo">
+    <div class="bread-icon">🥐</div>
+    <h1>Bakreme Bakes</h1>
+    <p>Production Tracker</p>
+  </div>
+  <label>Select User</label>
+  <select id="chef-select"></select>
+  <p style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:8px;">Enter PIN</p>
+  <div class="pin-display" id="pin-display">
+    <div class="pin-dot"></div><div class="pin-dot"></div>
+    <div class="pin-dot"></div><div class="pin-dot"></div>
+  </div>
+  <div class="numpad">
+    <button class="numpad-btn" data-num="1">1</button>
+    <button class="numpad-btn" data-num="2">2</button>
+    <button class="numpad-btn" data-num="3">3</button>
+    <button class="numpad-btn" data-num="4">4</button>
+    <button class="numpad-btn" data-num="5">5</button>
+    <button class="numpad-btn" data-num="6">6</button>
+    <button class="numpad-btn" data-num="7">7</button>
+    <button class="numpad-btn" data-num="8">8</button>
+    <button class="numpad-btn" data-num="9">9</button>
+    <button class="numpad-btn clear" id="btn-pin-clear">✕</button>
+    <button class="numpad-btn" data-num="0">0</button>
+    <button class="numpad-btn enter" id="btn-pin-enter">→</button>
+  </div>
+  <p class="error-msg" id="login-error"></p>
+</div>
+</div>
+
+<!-- CHEF ENTRY -->
+<div id="screen-entry" class="screen pb-sum">
+<div class="app-header">
+  <div class="app-logo">Bakreme Bakes<span>Production Entry</span></div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <div class="chef-badge" id="chef-name-badge">Chef</div>
+    <button class="btn-icon" id="btn-paste-import" title="Paste Import">P</button>
+    <button class="btn-icon" id="btn-logout">⎋</button>
+  </div>
+</div>
+<div style="padding:16px 20px 0;">
+  <div style="margin-bottom:14px;">
+    <label style="margin-bottom:4px;">Production Date</label>
+    <input type="date" id="prod-date" style="margin:0;" />
+  </div>
+  <div class="search-bar">
+    <span class="icon">🔍</span>
+    <input type="text" id="product-search" placeholder="Search products..." />
+  </div>
+  <div class="category-tabs" id="cat-tabs"></div>
+  <div id="product-list"></div>
+</div>
+<div class="summary-bar">
+  <div class="summary-info"><strong id="total-items">0</strong> items &nbsp;|&nbsp; <span id="total-qty">0</span> pcs</div>
+  <button class="btn btn-primary btn-sm" id="btn-submit">Submit ✓</button>
+</div>
+</div>
+
+<!-- CHEF DAILY VIEW -->
+<div id="screen-chef-view" class="screen pb-sum">
+<div class="app-header">
+  <div class="app-logo">Bakreme Bakes<span>My Production</span></div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <div class="chef-badge" id="chef-view-badge">Chef</div>
+    <button class="btn-icon" id="btn-chef-view-logout">⎋</button>
+  </div>
+</div>
+<div style="padding:16px 20px 0;">
+  <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px;">
+    <div style="flex:1;"><label style="margin-bottom:4px;">Date</label><input type="date" id="chef-view-date" style="margin:0;" /></div>
+    <button class="btn btn-primary btn-sm" id="btn-chef-view-load">Load</button>
+  </div>
+  <div id="chef-view-content"></div>
+</div>
+</div>
+
+<!-- SUPERVISOR -->
+<div id="screen-supervisor" class="screen pb-sum">
+<div class="app-header">
+  <div class="app-logo">Bakreme Bakes<span>Daily Production</span></div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <div class="chef-badge" id="sup-badge">Supervisor</div>
+    <button class="btn-icon" id="btn-sup-add-prod">+</button>
+    <button class="btn-icon" id="btn-sup-logout">⎋</button>
+  </div>
+</div>
+<div style="padding:16px 20px 0;">
+  <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px;">
+    <div style="flex:1;"><label style="margin-bottom:4px;">Date</label><input type="date" id="sup-date" style="margin:0;" /></div>
+    <button class="btn btn-primary btn-sm" id="btn-sup-load">Load</button>
+  </div>
+  <div id="sup-content"></div>
+</div>
+</div>
+
+<!-- ADMIN REPORTS -->
+<div id="screen-reports" class="screen pb-sum">
+<div class="app-header">
+  <div class="app-logo">Bakreme Bakes<span>Admin Reports</span></div>
+  <button class="btn-icon" id="btn-report-exit">⎋</button>
+</div>
+<div style="padding:16px 20px 0;">
+  <div class="report-filters">
+    <div class="filter-row" style="margin-bottom:10px;">
+      <div style="flex:1;"><label style="margin-bottom:4px;">From</label><input type="date" id="rep-from" style="margin:0;" /></div>
+      <div style="flex:1;"><label style="margin-bottom:4px;">To</label><input type="date" id="rep-to" style="margin:0;" /></div>
+    </div>
+    <div class="filter-row">
+      <select id="rep-chef" style="margin:0;flex:1;"></select>
+      <button class="btn btn-primary btn-sm" id="btn-load-report" style="margin:0;">Load</button>
+    </div>
+  </div>
+  <div class="report-tabs">
+    <button class="report-tab active" data-tab="summary">Summary</button>
+    <button class="report-tab" data-tab="product">By Product</button>
+    <button class="report-tab" data-tab="chef">Chef Totals</button>
+  </div>
+  <div class="export-row">
+    <button class="btn btn-secondary btn-sm" id="btn-excel">⬇ Excel</button>
+    <button class="btn btn-secondary btn-sm" id="btn-pdf">⬇ PDF</button>
+  </div>
+  <div id="report-stats" class="report-stats" style="display:none;"></div>
+  <div id="report-content"></div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+var sb = null;
+var currentChef = null;
+var allProducts = [];
+var productQtys = {};
+var productPlanned = {};
+var currentCategory = 'All';
+var reportData = [];
+var allChefs = [];
+var currentTab = 'summary';
+var pinValue = '';
+var today = new Date().toISOString().split('T')[0];
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type === 'error' ? ' error' : '') + ' show';
+  setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+
+function formatDate(d) { var p=d.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+
+
+
+function initSupabase(url, key) {
+  if (!window.supabase) {
+    showToast('Supabase library not loaded', 'error');
+    return false;
+  }
+
+  try {
+    const { createClient } = window.supabase;
+    sb = createClient(url, key);
+
+    if (!sb) throw new Error('Client init failed');
+
+    return true;
+  } catch (e) {
+    showToast('Supabase error: ' + e.message, 'error');
+    return false;
+  }
+}
+
+// -- Chefs ------------------------------------------
+function loadChefs() {
+  return sb.from('chefs').select('id, name, pin, role, is_active').eq('is_active', true).order('name')
+    .then(function(res) {
+      if (res.error) { showToast('Error loading users: ' + res.error.message, 'error'); return; }
+      allChefs = res.data || [];
+      var sel = document.getElementById('chef-select');
+      sel.innerHTML = '<option value="">- Select your name -</option>';
+      allChefs.forEach(function(c){
+        sel.innerHTML += '<option value="' + c.id + '" data-pin="' + c.pin + '" data-role="' + (c.role||'chef') + '">' + c.name + '</option>';
+      });
+      var rSel = document.getElementById('rep-chef');
+      rSel.innerHTML = '<option value="">All Chefs</option>';
+      allChefs.filter(function(c){ return c.role === 'chef'; }).forEach(function(c){
+        rSel.innerHTML += '<option value="' + c.id + '">' + c.name + '</option>';
+      });
+    });
+}
+
+// -- PIN --------------------------------------------
+function pinPress(d) {
+  if (pinValue.length >= 4) return;
+  pinValue += d; updatePinDisplay();
+  if (pinValue.length === 4) setTimeout(pinEnter, 150);
+}
+function pinClear() { pinValue = pinValue.slice(0,-1); updatePinDisplay(); }
+function updatePinDisplay() {
+  document.querySelectorAll('.pin-dot').forEach(function(dot,i){ dot.classList.toggle('filled', i < pinValue.length); });
+}
+function resetPin() { pinValue = ''; updatePinDisplay(); document.getElementById('login-error').textContent = ''; }
+
+function pinEnter() {
+  var chefId = document.getElementById('chef-select').value;
+  var errEl = document.getElementById('login-error');
+  if (!chefId) { errEl.textContent = 'Select your name first.'; return; }
+  if (pinValue.length !== 4) { errEl.textContent = 'Enter 4-digit PIN.'; return; }
+  var opt = document.querySelector('#chef-select option[value="' + chefId + '"]');
+  if (!opt || pinValue !== opt.dataset.pin) {
+    errEl.textContent = 'Incorrect PIN. Try again.';
+    pinValue = ''; updatePinDisplay(); return;
+  }
+  currentChef = allChefs.find(function(c){ return String(c.id) === String(chefId); });
+  sessionStorage.setItem('currentChef', JSON.stringify(currentChef));
+  errEl.textContent = '';
+  var role = currentChef.role || 'chef';
+
+  if (role === 'admin') {
+    document.getElementById('btn-report-exit').style.display = 'flex';
+    loadChefs().then(function(){ showScreen('screen-reports'); loadReport(); });
+  } else if (role === 'supervisor') {
+    document.getElementById('sup-badge').textContent = currentChef.name;
+    document.getElementById('sup-date').value = today;
+    showScreen('screen-supervisor');
+    loadSupervisorReport();
+  } else {
+    // chef role
+    document.getElementById('chef-name-badge').textContent = currentChef.name;
+    document.getElementById('chef-view-badge').textContent = currentChef.name;
+    loadChefProducts();
+  }
+}
+
+// -- Chef Products ----------------------------------
+function loadChefProducts() {
+  document.getElementById('product-list').innerHTML = '<div class="loader"><div class="spinner"></div>Loading products...</div>';
+  sb.from('chef_products').select('product_code').eq('chef_id', currentChef.id).eq('is_active', true)
+    .then(function(res) {
+      if (res.error) { showToast('Error: ' + res.error.message, 'error'); return; }
+      var codes = (res.data||[]).map(function(r){ return r.product_code; }).filter(Boolean);
+      if (!codes.length) { allProducts=[]; productQtys={}; productPlanned={}; buildCategoryTabs(); renderProducts(); showScreen('screen-entry'); return; }
+      sb.from('products').select('id,product_code,name,category,price,unit,is_active').in('product_code',codes).eq('is_active',true).order('category')
+        .then(function(res2) {
+          if (res2.error) { showToast('Error: ' + res2.error.message, 'error'); return; }
+          allProducts = res2.data || [];
+          allProducts.sort(function(a,b){ return a.category.localeCompare(b.category)||a.name.localeCompare(b.name); });
+          productQtys={}; productPlanned={};
+          allProducts.forEach(function(p){ productQtys[p.product_code]=0; productPlanned[p.product_code]=0; });
+          buildCategoryTabs(); renderProducts(); showScreen('screen-entry');
+        });
+    });
+}
+
+function buildCategoryTabs() {
+  var cats = ['All'];
+  allProducts.forEach(function(p){ if (cats.indexOf(p.category)===-1) cats.push(p.category); });
+  var el = document.getElementById('cat-tabs');
+  el.innerHTML = cats.map(function(c){
+    return '<button class="cat-tab'+(c===currentCategory?' active':'')+'" data-cat="'+c+'">'+c+'</button>';
+  }).join('');
+  el.querySelectorAll('.cat-tab').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      currentCategory=this.dataset.cat;
+      el.querySelectorAll('.cat-tab').forEach(function(b){ b.classList.remove('active'); });
+      this.classList.add('active'); renderProducts();
+    });
+  });
+}
+
+function renderProducts() {
+	if (!allProducts) return;
+	if (!productQtys) productQtys = {};	
+	if (!productPlanned) productPlanned = {};
+  var search = document.getElementById('product-search').value.toLowerCase();
+  var filtered = allProducts.filter(function(p){
+    return (currentCategory==='All'||p.category===currentCategory) &&
+      (!search||p.name.toLowerCase().indexOf(search)!==-1||(p.product_code||'').toLowerCase().indexOf(search)!==-1);
+  });
+  var el = document.getElementById('product-list');
+  if (!filtered.length) { el.innerHTML='<div class="empty-state"><div class="big">🔍</div><p>No products found</p></div>'; updateSummary(); return; }
+  el.innerHTML = filtered.map(function(p){
+    var code=p.product_code;
+    return '<div class="product-item'+(productQtys[code]>0?' has-qty':'')+'" id="pi-'+code+'">'+
+      '<div class="product-info">'+
+        '<div class="product-name">'+p.name+'</div>'+
+        '<div class="product-meta">#'+code+' &nbsp;|&nbsp; AED '+p.price+'</div>'+
+        '<div class="planned-row"><span class="planned-label">Planned:</span>'+
+          '<input type="number" class="planned-input" min="0" value="'+(productPlanned[code]||0)+'" data-code="'+code+'" data-type="planned" /></div>'+
+      '</div>'+
+      '<div class="qty-control">'+
+        '<button class="qty-btn" data-code="'+code+'" data-delta="-1">-</button>'+
+        '<input type="number" class="qty-input" min="0" value="'+(productQtys[code]||0)+'" id="qty-'+code+'" data-code="'+code+'" data-type="qty" />'+
+        '<button class="qty-btn plus" data-code="'+code+'" data-delta="1">+</button>'+
+      '</div></div>';
+  }).join('');
+  el.querySelectorAll('.qty-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var code=this.dataset.code, delta=parseInt(this.dataset.delta);
+      productQtys[code]=Math.max(0,(productQtys[code]||0)+delta);
+      var inp=document.getElementById('qty-'+code); if(inp) inp.value=productQtys[code];
+      document.getElementById('pi-'+code).classList.toggle('has-qty',productQtys[code]>0);
+      updateSummary();
+    });
+  });
+  el.querySelectorAll('input[data-type="qty"]').forEach(function(inp){
+    inp.addEventListener('change', function(){
+      var code=this.dataset.code; productQtys[code]=Math.max(0,parseInt(this.value)||0);
+      document.getElementById('pi-'+code).classList.toggle('has-qty',productQtys[code]>0); updateSummary();
+    });
+  });
+  el.querySelectorAll('input[data-type="planned"]').forEach(function(inp){
+    inp.addEventListener('change', function(){ productPlanned[this.dataset.code]=Math.max(0,parseInt(this.value)||0); });
+  });
+  updateSummary();
+}
+
+function updateSummary() {
+  var items=0,total=0;
+  Object.keys(productQtys).forEach(function(k){ if(productQtys[k]>0){items++;total+=productQtys[k];} });
+  document.getElementById('total-items').textContent=items;
+  document.getElementById('total-qty').textContent=total;
+}
+
+// -- Submit -----------------------------------------
+function submitProduction() {
+  var date=document.getElementById('prod-date').value;
+  var entries=allProducts.filter(function(p){ return productQtys[p.product_code]>0||productPlanned[p.product_code]>0; })
+    .map(function(p){ return {chef_id:currentChef.id,product_code:p.product_code,production_date:date,planned_qty:productPlanned[p.product_code]||0,produced_qty:productQtys[p.product_code]||0}; });
+  if (!entries.length) { showToast('No quantities entered','error'); return; }
+  sb.from('production_log').insert(entries).then(function(res){
+    if (res.error) { showToast('Submit failed: '+res.error.message,'error'); return; }
+    showToast(entries.length+' products submitted!');
+    allProducts.forEach(function(p){ productQtys[p.product_code]=0; productPlanned[p.product_code]=0; });
+    renderProducts();
+  });
+}
+
+// -- Chef Daily View --------------------------------
+function loadChefView() {
+  var date = document.getElementById('chef-view-date').value;
+  var el = document.getElementById('chef-view-content');
+  el.innerHTML = '<div class="loader"><div class="spinner"></div>Loading...</div>';
+  sb.from('production_log').select('product_code,planned_qty,produced_qty').eq('chef_id',currentChef.id).eq('production_date',date)
+    .then(function(res){
+      if (res.error) { showToast('Error: '+res.error.message,'error'); return; }
+      var logs = res.data||[];
+      if (!logs.length) { el.innerHTML='<div class="empty-state"><div class="big">📭</div><p>No production on this date</p></div>'; return; }
+      var codes = logs.map(function(r){ return r.product_code; });
+      sb.from('products').select('product_code,name,category').in('product_code',codes).then(function(res2){
+        var prodsMap={};
+        (res2.data||[]).forEach(function(p){ prodsMap[p.product_code]=p; });
+        var totalQty=0;
+        var rows=logs.map(function(r){
+          totalQty+=r.produced_qty||0;
+          var p=prodsMap[r.product_code]||{name:r.product_code};
+          return '<tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);">'+p.name+'</td>'+
+            '<td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:center;">'+(r.planned_qty||0)+'</td>'+
+            '<td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:center;">'+(r.produced_qty||0)+'</td></tr>';
+        }).join('');
+        el.innerHTML='<div class="chef-header">'+currentChef.name+' - '+formatDate(date)+'</div>'+
+          '<table class="sup-table"><tr><th>Product</th><th style="text-align:center;">Planned</th><th style="text-align:center;">Produced</th></tr>'+
+          rows+'<tr class="total-row"><td>Total</td><td style="text-align:center;">-</td><td style="text-align:center;">'+totalQty+'</td></tr></table>';
+      });
+    });
+}
+
+// -- Supervisor Report ------------------------------
+function loadSupervisorReport() {
+  var date = document.getElementById('sup-date').value;
+  var el = document.getElementById('sup-content');
+  var isAdmin = currentChef && currentChef.role === 'admin';
+  el.innerHTML = '<div class="loader"><div class="spinner"></div>Loading...</div>';
+  sb.from('production_log').select('chef_id,product_code,planned_qty,produced_qty').eq('production_date',date)
+    .then(function(res){
+      if (res.error) { showToast('Error: '+res.error.message,'error'); return; }
+      var logs=res.data||[];
+      if (!logs.length) { el.innerHTML='<div class="empty-state"><div class="big">📭</div><p>No production on this date</p></div>'; return; }
+      var chefIds=[...new Set(logs.map(function(r){ return r.chef_id; }))];
+      var codes=[...new Set(logs.map(function(r){ return r.product_code; }))];
+      Promise.all([
+        sb.from('chefs').select('id,name').in('id',chefIds),
+        sb.from('products').select('product_code,name,price').in('product_code',codes)
+      ]).then(function(results){
+        var chefsMap={};
+        (results[0].data||[]).forEach(function(c){ chefsMap[c.id]=c.name; });
+        var prodsMap={};
+        (results[1].data||[]).forEach(function(p){ prodsMap[p.product_code]=p; });
+        var byChef={};
+        logs.forEach(function(r){
+          if (!byChef[r.chef_id]) byChef[r.chef_id]={name:chefsMap[r.chef_id]||'Unknown',items:[]};
+          byChef[r.chef_id].items.push({product:prodsMap[r.product_code]||{name:r.product_code,price:0},planned:r.planned_qty||0,produced:r.produced_qty||0});
+        });
+        var html='<p style="font-size:13px;color:var(--muted);margin-bottom:12px;">'+formatDate(date)+'</p>';
+        var grandQty=0, grandVal=0;
+        Object.values(byChef).forEach(function(chef){
+          var totalQty=0, totalVal=0;
+          var rows=chef.items.map(function(i){
+            totalQty+=i.produced; totalVal+=i.produced*(i.product.price||0);
+            var row='<tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);">'+i.product.name+'</td>'+
+              '<td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:center;">'+i.planned+'</td>'+
+              '<td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:center;">'+i.produced+'</td>';
+            if (isAdmin) row+='<td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;">'+i.product.price+'</td>'+
+              '<td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;">AED '+(i.produced*(i.product.price||0)).toFixed(2)+'</td>';
+            row+='</tr>';
+            return row;
+          }).join('');
+          grandQty+=totalQty; grandVal+=totalVal;
+          html+='<div class="chef-header">👨‍🍳 '+chef.name+'</div>'+
+            '<table class="sup-table"><tr><th>Product</th><th style="text-align:center;">Planned</th><th style="text-align:center;">Produced</th>';
+          if (isAdmin) html+='<th style="text-align:right;">Price</th><th style="text-align:right;">Total</th>';
+          html+='</tr>'+rows+
+            '<tr class="total-row"><td>Total</td><td style="text-align:center;">-</td><td style="text-align:center;">'+totalQty+'</td>';
+          if (isAdmin) html+='<td></td><td style="text-align:right;">AED '+totalVal.toFixed(2)+'</td>';
+          html+='</tr></table>';
+        });
+        html+='<div class="grand-total"><span>Grand Total</span><span>'+grandQty+' pcs'+(isAdmin?' &nbsp;|&nbsp; AED '+grandVal.toFixed(2):'')+' </span></div>';
+        el.innerHTML=html;
+      });
+    });
+}
+
+// -- Admin Reports ----------------------------------
+function loadReport() {
+  var from=document.getElementById('rep-from').value, to=document.getElementById('rep-to').value;
+  var chefId=document.getElementById('rep-chef').value;
+  document.getElementById('report-content').innerHTML='<div class="loader"><div class="spinner"></div>Loading...</div>';
+  document.getElementById('report-stats').style.display='none';
+  var query=sb.from('production_log').select('id,production_date,chef_id,product_code,planned_qty,produced_qty,remarks')
+    .gte('production_date',from).lte('production_date',to).order('production_date',{ascending:false});
+  if (chefId) query=query.eq('chef_id',chefId);
+  query.then(function(res){
+    if (res.error) { showToast('Report error: '+res.error.message,'error'); return; }
+    var logs=res.data||[];
+    if (!logs.length) { reportData=[]; renderReport([]); return; }
+    var chefIds=[...new Set(logs.map(function(r){ return r.chef_id; }))];
+    var prodCodes=[...new Set(logs.map(function(r){ return r.product_code; }))];
+    Promise.all([
+      sb.from('chefs').select('id,name').in('id',chefIds),
+      sb.from('products').select('product_code,name,category,price').in('product_code',prodCodes)
+    ]).then(function(results){
+      var chefsMap={};(results[0].data||[]).forEach(function(c){ chefsMap[c.id]=c.name; });
+      var prodsMap={};(results[1].data||[]).forEach(function(p){ prodsMap[p.product_code]=p; });
+      reportData=logs.map(function(r){ return Object.assign({},r,{chef_name:chefsMap[r.chef_id]||'Unknown',product:prodsMap[r.product_code]||{name:r.product_code,category:'-',price:0}}); });
+      renderReport(reportData);
+    });
+  });
+}
+
+function renderReport(data) {
+  var statsEl=document.getElementById('report-stats'), el=document.getElementById('report-content');
+  if (!data.length) { statsEl.style.display='none'; el.innerHTML='<div class="empty-state"><div class="big">📭</div><p>No data</p></div>'; return; }
+  var totalQty=data.reduce(function(a,r){ return a+(r.produced_qty||0); },0);
+  var totalVal=data.reduce(function(a,r){ return a+(r.produced_qty||0)*(r.product.price||0); },0);
+  var uniqueDays=new Set(data.map(function(r){ return r.production_date; })).size;
+  statsEl.style.display='grid';
+  statsEl.innerHTML='<div class="stat-card"><div class="stat-val">'+totalQty+'</div><div class="stat-label">Total Pcs</div></div>'+
+    '<div class="stat-card"><div class="stat-val">'+uniqueDays+'</div><div class="stat-label">Days</div></div>'+
+    '<div class="stat-card"><div class="stat-val">AED '+totalVal.toFixed(0)+'</div><div class="stat-label">Value</div></div>';
+  if (currentTab==='summary') renderSummary(data);
+  else if (currentTab==='product') renderByProduct(data);
+  else renderByChef(data);
+}
+
+function switchTab(tab) {
+  currentTab=tab;
+  document.querySelectorAll('.report-tab').forEach(function(t){ t.classList.toggle('active',t.dataset.tab===tab); });
+  renderReport(reportData);
+}
+
+function renderSummary(data) {
+  var byDate={};
+  data.forEach(function(r){
+    if (!byDate[r.production_date]) byDate[r.production_date]={qty:0,val:0,items:0};
+    byDate[r.production_date].qty+=r.produced_qty||0;
+    byDate[r.production_date].val+=(r.produced_qty||0)*(r.product.price||0);
+    byDate[r.production_date].items++;
+  });
+  document.getElementById('report-content').innerHTML=Object.entries(byDate).sort(function(a,b){ return b[0].localeCompare(a[0]); })
+    .map(function(e){ return '<div class="report-card"><div class="report-card-header"><div><div class="report-card-title">'+formatDate(e[0])+'</div><div class="report-card-sub">'+e[1].items+' entries</div></div><div><div class="report-badge">'+e[1].qty+' pcs</div><div style="font-size:11px;color:var(--muted);text-align:right;margin-top:4px;">AED '+e[1].val.toFixed(0)+'</div></div></div></div>'; }).join('');
+}
+
+function renderByProduct(data) {
+  var byP={};
+  data.forEach(function(r){ var k=r.product_code; if(!byP[k]) byP[k]={name:r.product.name,cat:r.product.category,price:r.product.price,qty:0}; byP[k].qty+=r.produced_qty||0; });
+  document.getElementById('report-content').innerHTML=Object.values(byP).sort(function(a,b){ return b.qty-a.qty; })
+    .map(function(p){ return '<div class="report-card"><div class="report-card-header"><div><div class="report-card-title">'+p.name+'</div><div class="report-card-sub">'+p.cat+'</div></div><div><div class="report-badge">'+p.qty+' pcs</div><div style="font-size:11px;color:var(--muted);text-align:right;margin-top:4px;">AED '+(p.qty*(p.price||0)).toFixed(0)+'</div></div></div></div>'; }).join('');
+}
+
+function renderByChef(data) {
+  var byC={};
+  data.forEach(function(r){
+    if(!byC[r.chef_id]) byC[r.chef_id]={name:r.chef_name,products:{}};
+    var k=r.product_code;
+    if(!byC[r.chef_id].products[k]) byC[r.chef_id].products[k]={name:r.product.name,price:r.product.price||0,qty:0};
+    byC[r.chef_id].products[k].qty+=r.produced_qty||0;
+  });
+  var html='';
+  Object.values(byC).forEach(function(chef){
+    var grandQty=0, grandVal=0;
+    var rows=Object.values(chef.products).map(function(p){
+      var total=p.qty*p.price; grandQty+=p.qty; grandVal+=total;
+      return '<tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);">'+p.name+'</td>'+
+        '<td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:center;">'+p.qty+'</td>'+
+        '<td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;">'+p.price.toFixed(2)+'</td>'+
+        '<td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;">'+total.toFixed(2)+'</td></tr>';
+    }).join('');
+    html+='<div class="chef-header">'+chef.name+'</div>'+
+      '<table class="sup-table"><tr><th>Product</th><th style="text-align:center;">Produced</th><th style="text-align:right;">Price</th><th style="text-align:right;">Total</th></tr>'+
+      rows+
+      '<tr class="total-row"><td>Grand Total</td><td style="text-align:center;">'+grandQty+'</td><td></td><td style="text-align:right;">AED '+grandVal.toFixed(2)+'</td></tr>'+
+      '</table><div style="margin-bottom:16px;"></div>';
+  });
+  document.getElementById('report-content').innerHTML=html||'<div class="empty-state"><div class="big">📭</div><p>No data</p></div>';
+}
+
+// -- Export -----------------------------------------
+function exportExcel() {
+  if (!reportData.length) { showToast('No data','error'); return; }
+  if (!window.XLSX) { showToast('Excel not loaded','error'); return; }
+  var rows=reportData.map(function(r){ return {Date:r.production_date,Chef:r.chef_name,Category:r.product.category,Product:r.product.name,Code:r.product_code,Planned:r.planned_qty,Produced:r.produced_qty,'Price AED':r.product.price,'Value AED':((r.produced_qty||0)*(r.product.price||0)).toFixed(2),Remarks:r.remarks||''}; });
+  var ws=XLSX.utils.json_to_sheet(rows), wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Production');
+  XLSX.writeFile(wb,'bakreme-production.xlsx');
+  showToast('Excel exported!');
+}
+
+function exportPDF() {
+  if (!reportData.length) { showToast('No data','error'); return; }
+
+  var from = document.getElementById('rep-from').value;
+  var to = document.getElementById('rep-to').value;
+
+  var byDate = {};
+  reportData.forEach(function(r){
+    if(!byDate[r.production_date]) byDate[r.production_date]=[];
+    byDate[r.production_date].push(r);
+  });
+
+  var html = `
+  <html>
+  <head>
+  <style>
+    body{font-family:Georgia;padding:30px}
+    h1{color:#c47a20}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th{background:#eee;padding:6px}
+    td{padding:6px;border-bottom:1px solid #ddd}
+  </style>
+  </head>
+  <body>
+  <h1>Bakreme Bakes Report</h1>
+  <p>${from} to ${to}</p>
+  `;
+
+  Object.entries(byDate).forEach(function([date, rows]){
+    html += `<h2>${formatDate(date)}</h2><table>
+      <tr><th>Chef</th><th>Product</th><th>Planned</th><th>Produced</th><th>Value</th></tr>`;
+
+    rows.forEach(function(r){
+      html += `<tr>
+        <td>${r.chef_name}</td>
+        <td>${r.product.name}</td>
+        <td>${r.planned_qty||0}</td>
+        <td>${r.produced_qty||0}</td>
+        <td>${((r.produced_qty||0)*(r.product.price||0)).toFixed(2)}</td>
+      </tr>`;
+    });
+
+    html += `</table>`;
+  });
+
+  html += `</body></html>`;
+
+  var w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  w.print();
+}
+
+// -- Logout -----------------------------------------
+function logout() {
+  currentChef=null; pinValue=''; updatePinDisplay();
+  sessionStorage.removeItem('currentChef');
+  document.getElementById('chef-select').value='';
+  showScreen('screen-login'); loadChefs();
+}
+
+
+function openPasteModal() {
+  document.getElementById('paste-text').value = '';
+  document.getElementById('paste-status').textContent = '';
+  document.getElementById('paste-results').style.display = 'none';
+  document.getElementById('paste-items').innerHTML = '';
+  document.getElementById('paste-unmatched').textContent = '';
+  document.getElementById('modal-paste').style.display = 'block';
+}
+
+async function parsePasteText() {
+  var text = document.getElementById('paste-text').value.trim();
+  if (!text) { document.getElementById('paste-status').textContent = 'Please paste a message first.'; return; }
+  var statusEl = document.getElementById('paste-status');
+  statusEl.textContent = 'Parsing with AI...';
+  document.getElementById('btn-paste-parse').disabled = true;
+  document.getElementById('paste-results').style.display = 'none';
+  var prodList = allProducts.map(function(p) { return p.product_code + ': ' + p.name; }).join('\n');
+  var prompt = 'You are a bakery production parser. Given a WhatsApp message and a product list, extract quantities and match to closest product.\n\nAvailable products:\n' + prodList + '\n\nMessage:\n' + text + '\n\nReturn ONLY a JSON array, no markdown:\n[{"product_code":"1234","product_name":"Matched Name","qty":10,"original":"original line"},...]\nUse product_code UNMATCHED if no match found. Skip header lines.';
+  try {
+	  var resp = await fetch('/.netlify/functions/chat', {
+	  method: 'POST',
+	  headers: {
+		'Content-Type': 'application/json'
+	  },
+	  body: JSON.stringify({
+		model: 'claude-haiku-4-5-20251001',
+		max_tokens: 1024,
+		messages: [
+		  { role: 'user', content: prompt }
+		]
+	  })
+	});
+    var data = await resp.json();
+    if (data.error) { statusEl.textContent = 'AI error: ' + data.error.message; document.getElementById('btn-paste-parse').disabled = false; return; }
+    var raw = data.content[0].text.trim().replace(/```json|```/g, '').trim();
+    var items = JSON.parse(raw);
+    var matched = items.filter(function(i) { return i.product_code !== 'UNMATCHED'; });
+    var unmatched = items.filter(function(i) { return i.product_code === 'UNMATCHED'; });
+    document.getElementById('paste-items').innerHTML = matched.map(function(i) {
+      return '<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;gap:10px;">' +
+        '<div style="flex:1;min-width:0;"><div style="font-size:13px;color:var(--text);">' + i.product_name + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);">from: ' + i.original + '</div></div>' +
+        '<input type="number" min="0" value="' + i.qty + '" data-code="' + i.product_code + '" style="width:60px;text-align:center;padding:5px;margin:0;border-radius:7px;font-size:14px;font-weight:bold;" /></div>';
+    }).join('');
+    document.getElementById('paste-unmatched').textContent = unmatched.length ? 'Unmatched: ' + unmatched.map(function(i){ return i.original; }).join(', ') : '';
+    statusEl.textContent = matched.length + ' matched' + (unmatched.length ? ', ' + unmatched.length + ' unmatched' : '') + '.';
+    document.getElementById('paste-results').style.display = 'block';
+  } catch(e) {
+    statusEl.textContent = 'Error: ' + e.message;
+  }
+  document.getElementById('btn-paste-parse').disabled = false;
+}
+
+function applyPasteResults() {
+  document.querySelectorAll('#paste-items input[data-code]').forEach(function(inp) {
+    var code = inp.dataset.code;
+
+    if (!productQtys) productQtys = {};
+
+    if (productQtys.hasOwnProperty(code)) {
+      productQtys[code] = Math.max(0, parseInt(inp.value) || 0);
+    }
+  });
+
+  document.getElementById('modal-paste').style.display = 'none';
+  renderProducts();
+  showToast('Products applied!');
+}
+
+// -- Add Product --
+function openAddProduct() {
+  sb.from('products').select('category').then(function(r) {
+    var cats = [];
+    (r.data || []).forEach(function(p) { if (cats.indexOf(p.category) === -1) cats.push(p.category); });
+    cats.sort();
+    var sel = document.getElementById('ap-cat');
+    sel.innerHTML = cats.map(function(c) { return '<option>' + c + '</option>'; }).join('');
+  });
+  var chefList = allChefs.filter(function(c) { return (c.role || 'chef') === 'chef'; });
+  document.getElementById('ap-chefs').innerHTML = chefList.map(function(c) {
+    return '<label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);padding:7px 11px;border-radius:7px;font-size:12px;">' +
+      '<input type="checkbox" value="' + c.id + '" style="width:auto;margin:0;" /> ' + c.name + '</label>';
+  }).join('');
+  document.getElementById('ap-code').value = '';
+  document.getElementById('ap-name').value = '';
+  document.getElementById('ap-price').value = '';
+  document.getElementById('ap-newcat').value = '';
+  document.getElementById('ap-err').textContent = '';
+  document.getElementById('modal-addprod').style.display = 'block';
+}
+
+function saveAddProduct() {
+  var code = document.getElementById('ap-code').value.trim();
+  var name = document.getElementById('ap-name').value.trim();
+  var price = parseFloat(document.getElementById('ap-price').value) || 0;
+  var unit = document.getElementById('ap-unit').value;
+  var newcat = document.getElementById('ap-newcat').value.trim();
+  var cat = newcat || document.getElementById('ap-cat').value;
+  var errEl = document.getElementById('ap-err');
+  var cids = [];
+  document.querySelectorAll('#ap-chefs input[type=checkbox]:checked').forEach(function(cb) { cids.push(parseInt(cb.value)); });
+  if (!code) { errEl.textContent = 'Product code required.'; return; }
+  if (!name) { errEl.textContent = 'Product name required.'; return; }
+  if (!cat) { errEl.textContent = 'Category required.'; return; }
+  if (!cids.length) { errEl.textContent = 'Assign at least one chef.'; return; }
+  errEl.textContent = '';
+  sb.from('products').insert({ product_code: code, name: name, category: cat, price: price, unit: unit, is_active: true })
+    .then(function(r) {
+      if (r.error) { errEl.textContent = 'Error: ' + r.error.message; return; }
+      var maps = cids.map(function(id) { return { chef_id: id, product_code: code, is_active: true }; });
+      sb.from('chef_products').insert(maps).then(function(r2) {
+        if (r2.error) { errEl.textContent = 'Saved but mapping failed: ' + r2.error.message; return; }
+        document.getElementById('modal-addprod').style.display = 'none';
+        showToast('Product added and assigned!');
+      });
+    });
+}
+
+// -- Boot -------------------------------------------
+function boot() {
+  document.getElementById('prod-date').value=today;
+  document.getElementById('chef-view-date').value=today;
+  document.getElementById('sup-date').value=today;
+  document.getElementById('rep-from').value=today;
+  document.getElementById('rep-to').value=today;
+  var url='https://wnzhchzjfxsokyovanzo.supabase.co';
+  var key='sb_publishable_PvVP7scV0GfI2Ew0Hk-QLQ_Z1z9Jt_v';
+  initSupabase(url, key);
+  loadChefs().then(function(){
+    var saved = sessionStorage.getItem('currentChef');
+    if (saved) {
+      currentChef = JSON.parse(saved);
+      var role = currentChef.role || 'chef';
+      if (role === 'admin') {
+        showScreen('screen-reports'); loadReport();
+      } else if (role === 'supervisor') {
+        document.getElementById('sup-badge').textContent = currentChef.name;
+        showScreen('screen-supervisor'); loadSupervisorReport();
+      } else {
+        document.getElementById('chef-name-badge').textContent = currentChef.name;
+        document.getElementById('chef-view-badge').textContent = currentChef.name;
+        loadChefProducts();
+      }
+    } else {
+      showScreen('screen-login');
+    }
+  });
+}
+
+// -- Events -----------------------------------------
+document.addEventListener('DOMContentLoaded', function () {
+
+  // ---- Events -----------------------------------------
+  document.getElementById('btn-pin-clear').addEventListener('click', pinClear);
+  document.getElementById('btn-pin-enter').addEventListener('click', pinEnter);
+  document.getElementById('chef-select').addEventListener('change', resetPin);
+
+  document.querySelectorAll('.numpad-btn[data-num]').forEach(function(btn){
+    btn.addEventListener('click', function(){ pinPress(this.dataset.num); });
+  });
+
+  document.getElementById('btn-logout').addEventListener('click', logout);
+  document.getElementById('btn-submit').addEventListener('click', submitProduction);
+  document.getElementById('product-search').addEventListener('input', renderProducts);
+
+  // Chef view
+  document.getElementById('btn-chef-view-logout').addEventListener('click', logout);
+  document.getElementById('btn-chef-view-load').addEventListener('click', loadChefView);
+
+  // Supervisor
+  document.getElementById('btn-sup-logout').addEventListener('click', logout);
+  document.getElementById('btn-sup-load').addEventListener('click', loadSupervisorReport);
+
+  // Admin reports
+  document.getElementById('btn-report-exit').addEventListener('click', logout);
+  document.getElementById('btn-load-report').addEventListener('click', loadReport);
+  document.getElementById('btn-excel').addEventListener('click', exportExcel);
+  document.getElementById('btn-pdf').addEventListener('click', exportPDF);
+
+  document.querySelectorAll('.report-tab').forEach(function(btn){
+    btn.addEventListener('click', function(){ switchTab(this.dataset.tab); });
+  });
+
+  document.getElementById('btn-sup-add-prod').addEventListener('click', openAddProduct);
+
+  // FIXED (remove admin button if not exists)
+  var adminBtn = document.getElementById('btn-admin-add-prod');
+  if (adminBtn) adminBtn.addEventListener('click', openAddProduct);
+
+  document.getElementById('btn-ap-close').addEventListener('click', function() {
+    document.getElementById('modal-addprod').style.display = 'none';
+  });
+
+  document.getElementById('btn-ap-save').addEventListener('click', saveAddProduct);
+
+  // Paste modal
+  document.getElementById('btn-paste-import').addEventListener('click', openPasteModal);
+  document.getElementById('btn-paste-close').addEventListener('click', function() {
+    document.getElementById('modal-paste').style.display = 'none';
+  });
+  document.getElementById('btn-paste-parse').addEventListener('click', parsePasteText);
+  document.getElementById('btn-paste-confirm').addEventListener('click', applyPasteResults);
+
+  // BOOT
+  boot();
+
+});
+</script>
+
+<!-- ADD PRODUCT MODAL -->
+<div id="modal-addprod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:500;overflow-y:auto;">
+<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin:30px auto;max-width:440px;padding:22px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+    <h2 style="font-size:15px;color:var(--accent);">Add New Product</h2>
+    <button class="btn-icon" id="btn-ap-close">X</button>
+  </div>
+  <label>Product Code</label>
+  <input type="text" id="ap-code" placeholder="e.g. 1234" />
+  <label>Category</label>
+  <select id="ap-cat"></select>
+  <label>New Category (leave blank to use above)</label>
+  <input type="text" id="ap-newcat" placeholder="Optional new category" />
+  <label>Product Name</label>
+  <input type="text" id="ap-name" placeholder="Product name" />
+  <label>Price (AED)</label>
+  <input type="number" id="ap-price" placeholder="0.00" min="0" step="0.01" />
+  <label>Unit</label>
+  <select id="ap-unit">
+    <option value="pcs">pcs</option>
+    <option value="kg">kg</option>
+    <option value="box">box</option>
+  </select>
+  <label style="margin-top:8px;display:block;">Assign to Chefs</label>
+  <div id="ap-chefs" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;margin-bottom:12px;"></div>
+  <p class="error-msg" id="ap-err"></p>
+  <button class="btn btn-primary" id="btn-ap-save">Save Product</button>
+</div>
+</div>
+
+<!-- PASTE IMPORT MODAL -->
+<div id="modal-paste" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:500;overflow-y:auto;">
+<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin:20px auto;max-width:440px;padding:22px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <h2 style="font-size:15px;color:var(--accent);">Paste WhatsApp Message</h2>
+    <button class="btn-icon" id="btn-paste-close">X</button>
+  </div>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Paste the chef message below. AI will match products and quantities.</p>
+  <textarea id="paste-text" style="width:100%;height:180px;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px;border-radius:8px;font-size:13px;font-family:var(--font);resize:vertical;margin-bottom:10px;" placeholder="Chef: Ameer&#10;Date: 02/06/2026&#10;Sausage roll 10 pcs&#10;Coconut cream bun 30 pcs&#10;..."></textarea>
+  <button class="btn btn-primary" id="btn-paste-parse" style="margin-bottom:10px;">Parse with AI</button>
+  <div id="paste-status" style="font-size:12px;color:var(--muted);text-align:center;min-height:16px;margin-bottom:10px;"></div>
+  <div id="paste-results" style="display:none;">
+    <p style="font-size:12px;color:var(--muted);margin-bottom:8px;">Review matches — edit qty if needed:</p>
+    <div id="paste-items"></div>
+    <p class="error-msg" id="paste-unmatched" style="text-align:left;"></p>
+    <button class="btn btn-primary" id="btn-paste-confirm" style="margin-top:10px;">Apply to Entry</button>
+  </div>
+</div>
+</div>
+
+</body>
+</html>
