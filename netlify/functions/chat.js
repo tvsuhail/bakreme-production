@@ -1,9 +1,8 @@
-const data = await response.json();
+const text = data?.content?.[0]?.text;
 
-return {
-  statusCode: response.status,
-  body: JSON.stringify({
-    status: response.status,
-    raw: data
-  })
-};
+if (!text) {
+  console.log("Full response:", data);
+  throw new Error(data?.error?.message || "No AI output");
+}
+
+var raw = text.trim().replace(/```json|```/g, '').trim();
